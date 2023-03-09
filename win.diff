@@ -1,0 +1,36 @@
+diff --git a/src/include/souffle/utility/FileUtil.h b/src/include/souffle/utility/FileUtil.h
+index 24b40b9ee..20e5ae6f8 100644
+--- a/src/include/souffle/utility/FileUtil.h
++++ b/src/include/souffle/utility/FileUtil.h
+@@ -161,6 +161,12 @@ inline std::string which(const std::string& name) {
+         if ((::realpath(path.c_str(), buf) != nullptr) && isExecutable(path) && !existDir(path)) {
+             return buf;
+         }
++#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
++        path += ".exe";
++        if ((::realpath(path.c_str(), buf) != nullptr) && isExecutable(path) && !existDir(path)) {
++            return buf;
++        }
++#endif
+     }
+     return "";
+ }
+diff --git a/src/souffle.cpp b/src/souffle.cpp
+index a95bddc90..cdac282f7 100644
+--- a/src/souffle.cpp
++++ b/src/souffle.cpp
+@@ -40,9 +40,14 @@ bool processArgs(souffle::Global& glb, int argc, char** argv) {
+ }  // namespace
+ 
+ int main(int argc, char** argv) {
++try {
+     souffle::Global glb;
+ 
+     processArgs(glb, argc, argv);
+ 
+     return souffle::main(glb, argv[0]);
++} catch(const std::exception& e) {
++    std::cerr << "Uncaught exception: " << e.what() << std::endl;
++    std::exit(EXIT_FAILURE);
++}
+ }

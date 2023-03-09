@@ -1,0 +1,101 @@
+name: Build
+
+run-name: Build souffle - ${{ inputs.souffle-ref }}
+
+on: 
+  workflow_call:
+    inputs:
+      souffle-ref:
+        description: 'Git ref of souffle repo'
+        required: true
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      souffle-ref:
+        description: 'Git ref of souffle repo'
+        default: 'master'
+        required: true
+        type: string
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        linkage: [dynamic, static]
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Configure
+        id: config
+        run: |
+          switch ("${{ matrix.linkage }}") {
+            "dynamic" {
+              Write-Output VCPKG_TARGET_TRIPLET=x64-windows >> $env:GITHUB_OUTPUT
+              Write-Output CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL >> $env:GITHUB_OUTPUT
+              Write-Output ARTIFACT_NAME=souffle >> $env:GITHUB_OUTPUT
+            }
+            "static" {
+              Write-Output VCPKG_TARGET_TRIPLET=x64-windows-static >> $env:GITHUB_OUTPUT
+              Write-Output CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded >> $env:GITHUB_OUTPUT
+              Write-Output ARTIFACT_NAME=souffle-static >> $env:GITHUB_OUTPUT
+            }
+          }
+
+      - name: Install dependencies
+        run: |
+          choco install --no-progress winflexbison3 sqlite
+          vcpkg --triplet ${{ steps.config.outputs.VCPKG_TARGET_TRIPLET }} install sqlite3 zlib libffi
+
+      - name: Checkout souffle
+        uses: actions/checkout@v3
+        with:
+          repository: souffle-lang/souffle
+          ref: ${{ inputs.souffle-ref }}
+
+      - name: Checkout self
+        uses: actions/checkout@v3
+        with:
+          path: self
+
+      - name: Apply patches
+        run: git apply --verbose self/win.diff
+
+      - name: CMake-Configure
+        run: |
+          cmake -S . -B build `
+            -G "Visual Studio 17 2022" `
+            -T host=x64 `
+            -A x64 `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=${{ steps.config.outputs.VCPKG_TARGET_TRIPLET }} `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=${{ steps.config.outputs.CMAKE_MSVC_RUNTIME_LIBRARY }} `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DSOUFFLE_DOMAIN_64BIT=ON `
+            -DSOUFFLE_USE_CURSES=OFF `
+            -DSOUFFLE_USE_ZLIB=ON
+
+      - name: CMake-Build
+        run: |
+          $env:UseMultiToolTask = "true"
+          $env:EnforceProcessCountAcrossBuilds = "true"
+          cmake --build build `
+            --config Release `
+            --target souffle `
+            --verbose
+
+      - name: CMake-Install
+        run: |
+          cmake --install build `
+            --config Release `
+            --prefix ${{ github.workspace }}/install `
+            --strip `
+            --verbose
+
+      - name: Upload installed files
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.config.outputs.ARTIFACT_NAME }}
+          path: ${{ github.workspace }}/install
