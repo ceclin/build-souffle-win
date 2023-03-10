@@ -63,9 +63,9 @@ jobs:
       - name: Apply patches
         run: |
           git apply --verbose self/win.diff
-          Write-Output "
-          install(DIRECTORY ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} DESTINATION third-party/include)
-          " >> CMakeLists.txt
+          Write-Output '
+          install(DIRECTORY ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} DESTINATION third-party)
+          ' >> CMakeLists.txt
 
       - name: CMake-Configure
         run: |
