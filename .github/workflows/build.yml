@@ -65,6 +65,7 @@ jobs:
           git apply --verbose self/win.diff
           Write-Output '
           install(DIRECTORY ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} DESTINATION third-party)
+          install(FILES ${SQLite3_LIBRARY} ${ZLIB_LIBRARY_RELEASE} DESTINATION third-party/lib)
           ' >> CMakeLists.txt
 
       - name: CMake-Configure
