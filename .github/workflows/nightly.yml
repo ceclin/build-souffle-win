@@ -1,0 +1,42 @@
+name: Nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      souffle-ref: master
+
+  nightly:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: build
+    steps:
+      - name: Download souffle artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: souffle
+          path: souffle
+
+      - name: Download souffle-static artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: souffle-static
+          path: souffle-static
+
+      - name: Zip files
+        run: |
+          zip -rv souffle.zip souffle
+          zip -rv souffle-static.zip souffle-static
+
+      - name: Update Nightly Release
+        uses: andelf/nightly-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./*.zip
