@@ -71,6 +71,7 @@ jobs:
             -A x64 `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
             -DVCPKG_TARGET_TRIPLET=${{ steps.config.outputs.VCPKG_TARGET_TRIPLET }} `
+            -DX_VCPKG_APPLOCAL_DEPS_INSTALL=ON `
             -DCMAKE_MSVC_RUNTIME_LIBRARY=${{ steps.config.outputs.CMAKE_MSVC_RUNTIME_LIBRARY }} `
             -DCMAKE_BUILD_TYPE=Release `
             -DSOUFFLE_DOMAIN_64BIT=ON `
