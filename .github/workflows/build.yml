@@ -2,7 +2,7 @@ name: Build
 
 run-name: Build souffle - ${{ inputs.souffle-ref }}
 
-on: 
+on:
   workflow_call:
     inputs:
       souffle-ref:
@@ -44,11 +44,6 @@ jobs:
             }
           }
 
-      - name: Install dependencies
-        run: |
-          choco install --no-progress winflexbison3 sqlite
-          vcpkg --triplet ${{ steps.config.outputs.VCPKG_TARGET_TRIPLET }} install sqlite3 zlib libffi
-
       - name: Checkout souffle
         uses: actions/checkout@v3
         with:
@@ -68,6 +63,10 @@ jobs:
           install(FILES ${SQLite3_LIBRARY} ${ZLIB_LIBRARY_RELEASE} DESTINATION third-party/lib)
           ' >> CMakeLists.txt
 
+      - name: Install dependencies
+        run: |
+          choco install --no-progress choco-packages.config
+
       - name: CMake-Configure
         run: |
           cmake -S . -B build `
@@ -81,7 +80,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release `
             -DSOUFFLE_DOMAIN_64BIT=ON `
             -DSOUFFLE_USE_CURSES=OFF `
-            -DSOUFFLE_USE_ZLIB=ON
+            -DSOUFFLE_USE_ZLIB=ON `
+            -DSOUFFLE_USE_SQLITE=ON
 
       - name: CMake-Build
         run: |
