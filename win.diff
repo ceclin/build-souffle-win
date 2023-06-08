@@ -1,8 +1,8 @@
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 4576d1bb6..fb04fe8aa 100644
+index 68f045fbb..59410594b 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -338,13 +338,6 @@ if (SOUFFLE_USE_SQLITE)
+@@ -340,13 +340,6 @@ if (SOUFFLE_USE_SQLITE)
      COMMAND ${CMAKE_COMMAND} -E copy_if_different
      ${SQLite3_LIBRARY}
      $<TARGET_FILE_DIR:souffle>)
@@ -16,6 +16,19 @@ index 4576d1bb6..fb04fe8aa 100644
  endif ()
  
  if (SOUFFLE_USE_ZLIB)
+diff --git a/src/MainDriver.cpp b/src/MainDriver.cpp
+index 60c7c996f..5ead8adea 100644
+--- a/src/MainDriver.cpp
++++ b/src/MainDriver.cpp
+@@ -214,7 +214,7 @@ void compileToBinary(
+     argv.push_back(binary.string());
+ 
+ #if defined(_MSC_VER)
+-    const char* interpreter = "python";
++    const char* interpreter = "python.exe";
+ #else
+     const char* interpreter = "python3";
+ #endif
 diff --git a/src/include/souffle/utility/FileUtil.h b/src/include/souffle/utility/FileUtil.h
 index 24b40b9ee..20e5ae6f8 100644
 --- a/src/include/souffle/utility/FileUtil.h
