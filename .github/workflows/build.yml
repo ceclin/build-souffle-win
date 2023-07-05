@@ -89,7 +89,7 @@ jobs:
           $env:EnforceProcessCountAcrossBuilds = "true"
           cmake --build build `
             --config Release `
-            --target souffle `
+            --target souffle souffleprof `
             --verbose
 
       - name: CMake-Install
